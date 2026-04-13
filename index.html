@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PRTI 编程人格测试</title>
+  <style>
+    :root{
+      --bg:#e6f7f6;
+      --card:#ffffff;
+      --accent:#2bb3a6;
+      --accent-dark:#23978c;
+      --text:#1f2d3d;
+      --muted:#5b6b7a;
+      --border:#d9eceb;
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family: "PingFang SC","Microsoft Yahei",system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header{
+      text-align:center;
+      padding:32px 16px 8px;
+    }
+    header h1{ margin:0 0 8px; font-size:28px;}
+    header p{ margin:0; color:var(--muted); }
+
+    .container{
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    .card{
+      background: var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:20px;
+      margin:16px 0;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+    }
+    .q-title{ font-weight:700; margin-bottom:12px; }
+    .options{ display:grid; gap:10px; }
+    button.option{
+      width:100%;
+      text-align:left;
+      padding:12px 14px;
+      border:1px solid var(--border);
+      background:#f7fffe;
+      border-radius:10px;
+      cursor:pointer;
+      transition:all .2s ease;
+    }
+    button.option:hover{
+      border-color: var(--accent);
+      background:#f0fffd;
+    }
+    button.option.selected{
+      border-color: var(--accent-dark);
+      background:#e6fffb;
+    }
+    .footer{
+      text-align:center;
+      padding:10px 0 40px;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .actions{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      justify-content:center;
+      margin-top:10px;
+    }
+    .primary{
+      background: var(--accent);
+      color:#fff;
+      border:none;
+      padding:12px 20px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .primary:hover{ background: var(--accent-dark); }
+    .ghost{
+      background:#ffffff;
+      color:var(--accent-dark);
+      border:1px solid var(--accent);
+      padding:12px 20px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .result{
+      display:none;
+      margin-top:16px;
+      border-top:1px dashed var(--border);
+      padding-top:16px;
+    }
+    .badge{
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:999px;
+      background:#e6fffb;
+      color:#0d6b63;
+      font-weight:700;
+      margin-right:8px;
+    }
+    .emoji{
+      font-size:28px;
+      margin-right:8px;
+    }
+    .dim{
+      color:var(--muted);
+      font-size:14px;
+    }
+    .progress{
+      margin:8px 0 0;
+      font-size:14px;
+      color:var(--muted);
+      text-align:center;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>PRTI 编程人格测试</h1>
+  <p>20 道题，选出你的编程人格（幽默版）</p>
+</header>
+
+<div class="container" id="quiz"></div>
+
+<div class="container card">
+  <div class="actions">
+    <button class="primary" id="calcBtn">生成结果</button>
+    <button class="ghost" id="resetBtn">重置</button>
+  </div>
+  <div class="progress" id="progress">已答 0 / 20</div>
+  <div class="result" id="result"></div>
+</div>
+
+<div class="footer">© PRTI 编程人格测试 | 简约蓝绿色主题</div>
+
+<script>
+const priority = ["PYTHON-er","BLOCK-er","CYY-er","JAVA-er","HTML-er","CPP-er","SQL-er","BAT-er","COPY-er"];
+
+const personas = {
+  "PYTHON-er": {
+    emoji:"🐍",
+    title:"PYTHON-er（耍蛇者）",
+    people:"Python开发者、AI工程师、脚本爱好者",
+    feature:"拥抱最新技术，追求极致效率，信奉“人生苦短，我用Python”。鄙视一切繁琐语法，喜欢用缩进教做人。"
+  },
+  "BLOCK-er": {
+    emoji:"🧱",
+    title:"BLOCK-er（图形化人）",
+    people:"编程初学者、少儿编程爱好者、创客",
+    feature:"编程小白，注重好玩和即时反馈。认为编程就是搭积木，对花括号和分号深恶痛绝。"
+  },
+  "CYY-er": {
+    emoji:"🧠",
+    title:"CYY-er（手搓者）",
+    people:"C语言开发者、嵌入式工程师、底层系统程序员",
+    feature:"具备底层思维和强悍的动手能力。信奉“手动挡才是真开车”，觉得垃圾回收是玄学，喜欢指针在手、天下我有的掌控感。"
+  },
+  "JAVA-er": {
+    emoji:"☕",
+    title:"JAVA-er（橡皮人）",
+    people:"Java开发者、企业级系统程序员",
+    feature:"稳重、话多、耐磨。信奉“Write Once, Run Anywhere”，现实却常与空指针异常搏斗。擅长写设计模式和复杂的继承链。"
+  },
+  "HTML-er": {
+    emoji:"🎨",
+    title:"HTML-er（粉刷匠）",
+    people:"前端切图仔、UI转前端、网页设计者",
+    feature:"视觉驱动，乐观但缺乏底层安全感。觉得编程就是摆积木让东西好看，但遇到数据交互和后端接口就容易崩溃。"
+  },
+  "CPP-er": {
+    emoji:"⚙️",
+    title:"CPP-er（自虐僧）",
+    people:"系统级开发者、游戏引擎工程师、竞赛选手",
+    feature:"极致控制欲，痛并快乐着。认为内存就该手动管理，垃圾回收是懦夫行为。喜欢指针的指针，享受在崩溃边缘试探的刺激感。"
+  },
+  "SQL-er": {
+    emoji:"🧮",
+    title:"SQL-er（查询僧）",
+    people:"数据分析师、后端运维、报表开发者",
+    feature:"集合思维，逻辑严密但不擅长界面。能在脑中执行复杂的JOIN操作，却无法理解按钮为什么要做成圆角的。"
+  },
+  "BAT-er": {
+    emoji:"🖥️",
+    title:"BAT-er（脚本侠）",
+    people:"运维工程师、DevOps、懒人程序员",
+    feature:"极致的懒惰驱动效率，管道思维，命令行至上。能用一行命令解决的绝不写四行，鼠标是身外之物，信奉“rm -rf”的暴力美学。"
+  },
+  "COPY-er": {
+    emoji:"📋",
+    title:"COPY-er（复印机）",
+    people:"Stack Overflow重度依赖者、AI代码生成器使用者、面向搜索引擎编程者",
+    feature:"实用主义，拥有Ctrl+C/V的肌肉记忆。不在乎底层原理，只在乎“能跑就行”，但经常把bug连同代码一起复制过来。"
+  }
+};
+
+const questions = [
+  {
+    q:"1. 老师布置了一个大作业：写一个程序统计全班成绩。你会？",
+    options:[
+      {t:"A. 用Python的pandas库，三行代码搞定"},
+      {t:"B. 用图形化编程工具（如Scratch）拖拽一个成绩统计器"},
+      {t:"C. 用C语言从头写排序、平均分、方差，手动管理数组内存"},
+      {t:"D. 定义一个ScoreProcessor接口，再用工厂模式创建不同统计策略"},
+    ],
+    persona:["PYTHON-er","BLOCK-er","CYY-er","JAVA-er"]
+  },
+  {
+    q:"2. 小组作业中，你的队友把代码发给你，但完全没注释。你会？",
+    options:[
+      {t:"A. 瞬间崩溃，逼着他写注释，并规范变量名"},
+      {t:"B. 无所谓，反正我用图形化编程，没有代码"},
+      {t:"C. 花一晚上读懂逻辑，顺便帮他优化了内存分配"},
+      {t:"D. 直接复制粘贴到自己的项目里，能跑就行"},
+    ],
+    persona:["PYTHON-er","BLOCK-er","CYY-er","COPY-er"]
+  },
+  {
+    q:"3. 你正在食堂排队，前面有个人犹豫不决看了五分钟。你会？",
+    options:[
+      {t:"A. 心里默念：时间复杂度O(n²)，建议他使用二分查找决定吃啥"},
+      {t:"B. 直接写个决策树脚本帮他选（如果手机能跑Python的话）"},
+      {t:"C. 默默打开手机记事本，记录下这个“死锁”现象"},
+      {t:"D. 挤上去说“同学，要不你复制一份我的套餐？”"},
+    ],
+    persona:["CPP-er","PYTHON-er","JAVA-er","COPY-er"]
+  },
+  {
+    q:"4. 你的电脑突然蓝屏，你最可能做的是？",
+    options:[
+      {t:"A. 重启，然后祈祷别再出现"},
+      {t:"B. 打开命令行，用dmesg和grep分析日志"},
+      {t:"C. 用C语言写一个内存诊断工具，逐字节检查"},
+      {t:"D. 发朋友圈：“救命啊，我的图形化不见了！”"},
+    ],
+    persona:["COPY-er","BAT-er","CYY-er","BLOCK-er"]
+  },
+  {
+    q:"5. 选课时，你更倾向于选哪种老师？",
+    options:[
+      {t:"A. 讲底层原理、指针和内存的硬核老师"},
+      {t:"B. 讲实用框架、一行代码出效果的老师"},
+      {t:"C. 讲数据库和SQL，逻辑清晰但从不展示界面的老师"},
+      {t:"D. 讲网页设计，每节课都做漂亮页面的老师"},
+    ],
+    persona:["CPP-er","PYTHON-er","SQL-er","HTML-er"]
+  },
+  {
+    q:"6. 你的手机相册有1000张照片，你想按人脸自动分类。你会？",
+    options:[
+      {t:"A. 写个Python脚本调用百度API"},
+      {t:"B. 下载一个现成的App，一键分类"},
+      {t:"C. 用C++调用OpenCV，自己实现人脸检测算法"},
+      {t:"D. 用SQL语句？等等，照片怎么存在数据库里？"},
+    ],
+    persona:["PYTHON-er","COPY-er","CPP-er","SQL-er"]
+  },
+  {
+    q:"7. 期末考试前，你的复习策略是？",
+    options:[
+      {t:"A. 刷完所有历年真题，总结出题规律"},
+      {t:"B. 只看老师划的重点，其他随缘"},
+      {t:"C. 把课本从头到尾自己敲一遍代码"},
+      {t:"D. 找个视频教程，2倍速看完"},
+    ],
+    persona:["JAVA-er","COPY-er","CYY-er","BLOCK-er"]
+  },
+  {
+    q:"8. 你如何看待“代码复用”？",
+    options:[
+      {t:"A. 写一个万能函数，到处调用"},
+      {t:"B. 把别人的代码复制粘贴，改改变量名"},
+      {t:"C. 写一个类，继承再继承，实现多态"},
+      {t:"D. 用C的宏定义，预处理阶段就展开"},
+    ],
+    persona:["PYTHON-er","COPY-er","JAVA-er","CYY-er"]
+  },
+  {
+    q:"9. 你最喜欢的手机App交互方式是？",
+    options:[
+      {t:"A. 全是命令行，没有图形界面"},
+      {t:"B. 拖拽、滑动、色彩鲜艳的按钮"},
+      {t:"C. 语音控制，不需要动手"},
+      {t:"D. 每一步都有确认弹窗，防止误操作"},
+    ],
+    persona:["BAT-er","HTML-er","BLOCK-er","JAVA-er"]
+  },
+  {
+    q:"10. 你在网上找到一个完美的代码片段，但它用的是你没学过的语言。你会？",
+    options:[
+      {t:"A. 用Python的subprocess调用它，自己写个包装器"},
+      {t:"B. 把代码截图，手打一遍，边打边学"},
+      {t:"C. 直接用，管它什么语言，能跑就行"},
+      {t:"D. 放弃，坚持只用图形化编程"},
+    ],
+    persona:["PYTHON-er","CYY-er","COPY-er","BLOCK-er"]
+  },
+  {
+    q:"11. 小组讨论时，大家争论一个算法的时间复杂度。你会？",
+    options:[
+      {t:"A. 直接写个小程序跑一下，看运行时间"},
+      {t:"B. 画出流程图，用积木块模拟执行"},
+      {t:"C. 用数学推导证明O(n log n)下界"},
+      {t:"D. 查Stack Overflow，找到标准答案"},
+    ],
+    persona:["PYTHON-er","BLOCK-er","CPP-er","COPY-er"]
+  },
+  {
+    q:"12. 你的朋友说“编程好难，我连hello world都报错”。你会建议他？",
+    options:[
+      {t:"A. 试试图形化编程，比如Scratch"},
+      {t:"B. 先学C语言，从指针开始，理解计算机本质"},
+      {t:"C. 用Python，print(“hello world”) 就行"},
+      {t:"D. 直接复制我电脑上的hello world.exe给他"},
+    ],
+    persona:["BLOCK-er","CYY-er","PYTHON-er","COPY-er"]
+  },
+  {
+    q:"13. 你如何看待“早八上课”？",
+    options:[
+      {t:"A. 用cron定时任务自动签到"},
+      {t:"B. 头天晚上设置5个闹钟，每5分钟响一次"},
+      {t:"C. 随缘，醒了就去，不醒就复制室友的笔记"},
+      {t:"D. 早八？不存在的，我选课时就筛掉了"},
+    ],
+    persona:["BAT-er","JAVA-er","COPY-er","PYTHON-er"]
+  },
+  {
+    q:"14. 你的浏览器打开了20个标签页，内存爆了。你会？",
+    options:[
+      {t:"A. 写个脚本批量关闭前15个"},
+      {t:"B. 手动一个个关，顺便保存重要页面"},
+      {t:"C. 把浏览器进程kill掉，重新打开，然后说“刚才发生了什么？”"},
+      {t:"D. 用C语言写一个内存管理器，给每个标签页分配精确内存"},
+    ],
+    persona:["BAT-er","JAVA-er","COPY-er","CPP-er"]
+  },
+  {
+    q:"15. 你更喜欢哪种小组作业分工方式？",
+    options:[
+      {t:"A. 每人负责一个模块，最后我用接口拼接"},
+      {t:"B. 每人写一段代码，然后我用Ctrl+C/V合并"},
+      {t:"C. 我一个人写完所有代码，其他人负责PPT"},
+      {t:"D. 我们用在线协作平台，实时同步编辑"},
+    ],
+    persona:["JAVA-er","COPY-er","CYY-er","PYTHON-er"]
+  },
+  {
+    q:"16. 你的外卖迟到了30分钟，你会？",
+    options:[
+      {t:"A. 写个爬虫监控骑手位置，并自动发送催单消息"},
+      {t:"B. 直接给差评，复制粘贴之前的差评模板"},
+      {t:"C. 打电话给商家，用多线程思维同时催单和退款"},
+      {t:"D. 默默等待，相信队列先进先出"},
+    ],
+    persona:["PYTHON-er","COPY-er","CPP-er","JAVA-er"]
+  },
+  {
+    q:"17. 你最喜欢的宿舍娱乐方式是？",
+    options:[
+      {t:"A. 一起联机打游戏，我用脚本自动操作"},
+      {t:"B. 用投影仪看教程，学做网页"},
+      {t:"C. 躺在床上一动不动，刷短视频"},
+      {t:"D. 写一个局域网聊天程序，然后和室友互发消息"},
+    ],
+    persona:["BAT-er","HTML-er","BLOCK-er","CYY-er"]
+  },
+  {
+    q:"18. 期末考试你遇到一道不会的题，你会？",
+    options:[
+      {t:"A. 把相关公式全部列出来，试图推导"},
+      {t:"B. 看旁边同学的答案，稍微改改数字"},
+      {t:"C. 空着，交卷后立刻去查资料"},
+      {t:"D. 用Python交互式环境现场测试（如果允许带电脑）"},
+    ],
+    persona:["JAVA-er","COPY-er","CYY-er","PYTHON-er"]
+  },
+  {
+    q:"19. 你如何整理你的电脑桌面？",
+    options:[
+      {t:"A. 按文件类型、日期、项目分文件夹，层次清晰"},
+      {t:"B. 全扔到一个叫“新建文件夹”的文件夹里"},
+      {t:"C. 用脚本自动归类，并生成索引"},
+      {t:"D. 不放任何图标，全用命令行操作"},
+    ],
+    persona:["JAVA-er","COPY-er","BAT-er","CPP-er"]
+  },
+  {
+    q:"20. 如果让你用一种编程语言形容你的大学生活，你会选？",
+    options:[
+      {t:"A. Python：简单快乐，偶尔报错但总能解决"},
+      {t:"B. C语言：自由但容易崩溃，需要小心内存（时间）"},
+      {t:"C. HTML：看起来丰富，其实没啥深度"},
+      {t:"D. SQL：每天都在查询“什么时候下课”"},
+    ],
+    persona:["PYTHON-er","CYY-er","HTML-er","SQL-er"]
+  }
+];
+
+const quizEl = document.getElementById("quiz");
+const resultEl = document.getElementById("result");
+const progressEl = document.getElementById("progress");
+
+const answers = new Array(questions.length).fill(null);
+
+function render(){
+  quizEl.innerHTML = "";
+  questions.forEach((item, idx)=>{
+    const card = document.createElement("div");
+    card.className = "card";
+    const title = document.createElement("div");
+    title.className = "q-title";
+    title.textContent = item.q;
+
+    const opts = document.createElement("div");
+    opts.className = "options";
+
+    item.options.forEach((op, opIdx)=>{
+      const btn = document.createElement("button");
+      btn.className = "option";
+      btn.textContent = op.t;
+      if(answers[idx] === opIdx) btn.classList.add("selected");
+      btn.onclick = ()=>{
+        answers[idx] = opIdx;
+        render();
+      };
+      opts.appendChild(btn);
+    });
+
+    card.appendChild(title);
+    card.appendChild(opts);
+    quizEl.appendChild(card);
+  });
+
+  const answered = answers.filter(v=>v!==null).length;
+  progressEl.textContent = `已答 ${answered} / ${questions.length}`;
+}
+
+function calc(){
+  if(answers.includes(null)){
+    alert("请先完成所有题目再生成结果～");
+    return;
+  }
+  const score = {};
+  priority.forEach(p=>score[p]=0);
+
+  answers.forEach((opIdx, qIdx)=>{
+    const persona = questions[qIdx].persona[opIdx];
+    score[persona] += 1;
+  });
+
+  let max = -1;
+  priority.forEach(p=>{ if(score[p]>max) max = score[p]; });
+  let winner = priority.find(p=>score[p]===max);
+
+  const p = personas[winner];
+  resultEl.innerHTML = `
+    <div>
+      <span class="emoji">${p.emoji}</span>
+      <span class="badge">${winner}</span>
+      <span class="dim">最高分：${max} / 20</span>
+    </div>
+    <h3>${p.title}</h3>
+    <p><strong>代表人群：</strong>${p.people}</p>
+    <p><strong>一句话特色：</strong>${p.feature}</p>
+    <p class="dim">（结果如出现平局，已按优先级：PYTHON-er > BLOCK-er > CYY-er > JAVA-er > HTML-er > CPP-er > SQL-er > BAT-er > COPY-er 处理）</p>
+  `;
+  resultEl.style.display = "block";
+  resultEl.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function reset(){
+  for(let i=0;i<answers.length;i++) answers[i]=null;
+  resultEl.style.display = "none";
+  render();
+}
+
+document.getElementById("calcBtn").onclick = calc;
+document.getElementById("resetBtn").onclick = reset;
+
+render();
+</script>
+</body>
+</html>
