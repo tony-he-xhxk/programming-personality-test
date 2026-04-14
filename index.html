@@ -127,21 +127,21 @@
 <body>
 <header>
   <h1>PRTI 编程人格测试</h1>
-  <p>20 道题，选出你的编程人格（幽默版）</p>
+  <p>20道题，猜猜你的编程人格是什么？</p>
 </header>
 
 <div class="container" id="quiz"></div>
 
 <div class="container card">
   <div class="actions">
-    <button class="primary" id="calcBtn">生成结果</button>
-    <button class="ghost" id="resetBtn">重置</button>
+    <button class="primary" id="calcBtn">告诉我答案！</button>
+    <button class="ghost" id="resetBtn">再来一遍！</button>
   </div>
   <div class="progress" id="progress">已答 0 / 20</div>
   <div class="result" id="result"></div>
 </div>
 
-<div class="footer">© PRTI 编程人格测试 | 简约蓝绿色主题</div>
+<div class="footer">© PRTI 编程人格测试 | By tony-he-xhxk，一个无趣的大学牲</div>
 
 <script>
 const priority = ["PYTHON-er","BLOCK-er","CYY-er","JAVA-er","HTML-er","CPP-er","SQL-er","BAT-er","COPY-er"];
@@ -240,7 +240,7 @@ const questions = [
       {t:"A. 重启，然后祈祷别再出现"},
       {t:"B. 打开命令行，用dmesg和grep分析日志"},
       {t:"C. 用C语言写一个内存诊断工具，逐字节检查"},
-      {t:"D. 发朋友圈：“救命啊，我的图形化不见了！”"},
+      {t:"D. 发朋友圈：“救命啊，我的桌面不见了！”"},
     ],
     persona:["COPY-er","BAT-er","CYY-er","BLOCK-er"]
   },
@@ -472,7 +472,7 @@ function calc(){
     <h3>${p.title}</h3>
     <p><strong>代表人群：</strong>${p.people}</p>
     <p><strong>一句话特色：</strong>${p.feature}</p>
-    <p class="dim">（结果如出现平局，已按优先级：PYTHON-er > BLOCK-er > CYY-er > JAVA-er > HTML-er > CPP-er > SQL-er > BAT-er > COPY-er 处理）</p>
+    <p class="dim">本测试仅供娱乐，请勿用于重要决策！</p>
   `;
   resultEl.style.display = "block";
   resultEl.scrollIntoView({behavior:"smooth", block:"start"});
